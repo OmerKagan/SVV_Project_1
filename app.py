@@ -3,6 +3,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import InputRequired
 from flask_oauthlib.client import OAuth
+import time
 
 app = Flask(__name__)
 app.secret_key = '123app'
@@ -16,6 +17,12 @@ user_credentials = {
     'user2@login.com': 'password2',
     'user3@login.com': 'password3'
 }
+
+# Dictionary to keep track of failed login attempts
+failed_login_attempts = {}
+
+# Dictionary to store blocked emails and their unblock time
+blocked_emails = {}
 
 # Configure Google OAuth
 app.config['GOOGLE_ID'] = '942550748965-626q4fdhqc983jit0pg1ij7381skoo01.apps.googleusercontent.com'
@@ -35,14 +42,17 @@ google = oauth.remote_app(
     authorize_url='https://accounts.google.com/o/oauth2/auth',
 )
 
+
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[InputRequired()])
     password = PasswordField('Password', validators=[InputRequired()])
     submit = SubmitField('Login')
 
+
 @app.route('/')
 def index():
     return render_template('login.html')
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -51,13 +61,33 @@ def login():
     if form.email.data == '' or form.password.data == '':
         error = 'Empty email or password!'
     if form.validate_on_submit():
-        # Check credentials and authenticate user
-        if authenticate_user(form.email.data, form.password.data):
-            session['user'] = form.email.data
-            return redirect(url_for('entry_page'))
+        email = form.email.data
+        password = form.password.data
+
+        # Check if email is blocked
+        if email in blocked_emails and time.time() < blocked_emails[email]:
+            error = 'Account temporarily blocked! Try again later.'
         else:
-            error = 'Invalid email or password!'
+            # Check credentials and authenticate user
+            if authenticate_user(email, password):
+                if email in failed_login_attempts:
+                    del failed_login_attempts[email]  # Reset failed attempts
+                session['user'] = email
+                return redirect(url_for('entry_page'))
+            else:
+                error = 'Invalid email or password!'
+                # Increment failed attempts count
+                if email in failed_login_attempts:
+                    failed_login_attempts[email] += 1
+                else:
+                    failed_login_attempts[email] = 1
+
+                # Block account if attempts reach 5
+                if failed_login_attempts[email] >= 5:
+                    blocked_emails[email] = time.time() + 60  # Block for 60 seconds
+
     return render_template('login.html', form=form, error=error)
+
 
 @app.route('/entry-page')
 def entry_page():
@@ -66,14 +96,17 @@ def entry_page():
     else:
         return redirect(url_for('login'))
 
+
 @app.route('/logout')
 def logout():
     session.pop('user', None)
     return redirect(url_for('login'))
 
+
 @app.route('/google-login')
 def google_login():
     return google.authorize(callback=url_for('google_authorized', _external=True))
+
 
 @app.route('/google-authorized')
 def google_authorized():
@@ -88,9 +121,11 @@ def google_authorized():
     session['user'] = user_info.data['email']
     return redirect(url_for('entry_page'))
 
+
 @google.tokengetter
 def get_google_oauth_token():
     return session.get('google_token')
+
 
 def authenticate_user(email, password):
     # Check if the email exists in the user_credentials map and if the password matches
@@ -98,6 +133,7 @@ def authenticate_user(email, password):
         return True
     else:
         return False
+
 
 if __name__ == '__main__':
     app.run(debug=True)

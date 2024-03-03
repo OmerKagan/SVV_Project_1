@@ -8,7 +8,7 @@ import time
 driver = webdriver.Chrome()
 
 # Open the login page
-driver.get("http://127.0.0.1:5000/login")  # Adjust the URL if needed
+driver.get("http://127.0.0.1:5000/login")
 
 # Empty Input Login Test
 def empty_input_login():

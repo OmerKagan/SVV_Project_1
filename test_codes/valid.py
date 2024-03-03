@@ -29,10 +29,10 @@ password_input.send_keys("password1")
 login_button.click()
 
 # Wait for the login process to complete
-time.sleep(2)  # Adjust the wait time as needed
+time.sleep(2)
 
 # Check if redirection to the entry page is successful
-if driver.current_url == "http://127.0.0.1:5000/entry-page":  # Adjust the URL if needed
+if driver.current_url == "http://127.0.0.1:5000/entry-page":
     print("Valid Credentials Login test passed: User successfully logged in.")
 else:
     print("Valid Credentials Login test failed: User login unsuccessful.")
