@@ -19,9 +19,9 @@ time.sleep(2)
 
 # Check if redirection to Google authentication page is successful
 if "accounts.google.com" in driver.current_url:
-    print("Google Authentication Page opened successfully. Assuming user is prompted to log in.")
+    print("Test passed: Google Authentication Page opened successfully. Assuming user is prompted to log in.")
 else:
-    print("Google Authentication Page not opened. Verification failed.")
+    print("Verification failed: Google Authentication Page not opened.")
 
 # Close the browser
 driver.quit()
