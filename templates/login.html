@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Login System</h2>
+        <form id="loginForm" action="/login" method="POST">
+            <input type="email" id="email" name="email" placeholder="Email" required><br>
+            <input type="password" id="password" name="password" placeholder="Password" required><br>
+            <button type="button" onclick="submitForm()">Login</button>
+        </form>
+        <div id="googleLogin">
+            <button onclick="loginWithGoogle()">Login with Google</button>
+        </div>
+        <div id="alertContainer"></div>
+    </div>
+
+    <script>
+        function submitForm() {
+            var form = document.getElementById('loginForm');
+            form.submit();
+        }
+
+        function loginWithGoogle() {
+            window.location.href = "/google-login";
+        }
+
+        // Function to display alert message
+        function showAlert(message, type) {
+            var alertContainer = document.getElementById('alertContainer');
+            var alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-' + type;
+            alertDiv.innerHTML = message;
+            alertContainer.appendChild(alertDiv);
+
+            // Automatically remove the alert after 3 seconds
+            setTimeout(function() {
+                alertDiv.remove();
+            }, 3000);
+        }
+
+        // Check if error message exists in the template and display it as an alert
+        window.onload = function() {
+        var errorMessage = "{{ error }}";
+        if (errorMessage.trim() !== "") {
+            showAlert(errorMessage, 'danger');
+        }
+    };
+    </script>
+</body>
+</html>
